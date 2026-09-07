@@ -65,8 +65,8 @@ auf einem Mac neu installiert werden.
 Das **gesamte Daten-Sammeln und Training läuft auf dem Laptop** — kein Mac nötig.
 
 ```powershell
-git clone https://github.com/Matadorrr91/air-writing-recognition.git
-cd air-writing-recognition
+git clone https://github.com/Matadorrr91/air-writing-sensor.git
+cd air-writing-sensor
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -235,6 +235,49 @@ Die komplette Python-Kette lässt sich **ohne Hardware** verifizieren:
 
 ---
 
+## 📊 Ergebnisse
+
+Der finale Datensatz umfasst **624 Segmente** über alle zehn Ziffern, aufgenommen von
+drei Personen auf einem Gerät. Die typische Segmentdauer liegt im Median bei rund
+2,5 Sekunden (≈125 Messpunkte bei 50 Hz).
+
+| Auswertung | Genauigkeit |
+|---|---|
+| Zufälliger 80/20-Split (624 Segmente) | **86,3 %** |
+| Cross-Session-Hold-out (150 Beispiele einer unabhängigen Sitzung) | **96,7 %** (145/150) |
+
+Die beiden Werte gehören zusammengelesen und nicht einzeln zitiert. Der zufällige Split
+ist optimistisch, weil Aufnahmen derselben Sitzung gleichzeitig in Training und Test
+landen können. Der Cross-Session-Wert stammt umgekehrt aus einer einzelnen, in sich sehr
+konsistenten Sitzung — bei 150 Testbeispielen verschieben schon zwei zusätzliche Fehler
+das Ergebnis um über einen Prozentpunkt.
+
+**Verlauf über sechs Trainingsiterationen** (Datensatz wuchs von 474 auf 624 Segmente):
+
+| Iteration | 1 | 2 | 3 | 4 | 5 | 6 |
+|---|---|---|---|---|---|---|
+| 80/20-Split | 81,7 % | 85,5 % | 84,0 % | 84,0 % | — | 86,3 % |
+| Cross-Session | — | — | — | — | 96,7 % | — |
+
+Zwischen Iteration 2 und 6 bewegt sich der Wert trotz wachsendem Datensatz nur in einem
+schmalen Band. Nachgesammelt wurden dort vor allem sehr ähnliche Aufnahmen (gleiche
+Person, gleiches Gerät, gleiche Bedingungen), deren Variation das Modell offenbar schon
+ausgeschöpft hatte.
+
+**Fehleranalyse:** Auffälligster Klassenfehler war die **7** mit 55 % Trefferquote
+(Iteration mit 474 Segmenten) — meist als 2 klassifiziert, da beide je nach Schreibweise
+mit einer ähnlichen Anfangsbewegung starten. Ebenfalls verwechselt wurden 0 und 6, was
+sich durch bewusst unterschiedlichere Schreibweise verbessern ließ.
+
+**Kontrollexperiment zu langen Segmenten** (gemittelt über drei Seeds): mit ihnen 80,5 %
+(± 0,064), ohne sie 77,1 % (± 0,051). Das Weglassen kostet rund 3,3 Prozentpunkte —
+gegen unsere Erwartung. Bei dieser Streuung eher eine Tendenz als ein gesicherter Effekt.
+
+Vollständige Einordnung, Methodik und Limitationen im wissenschaftlichen Artikel:
+[`bericht/`](bericht/).
+
+---
+
 ## 🗺️ Status
 
 - [x] Streaming-Skelett — App sendet Daten, Server empfängt
@@ -244,8 +287,12 @@ Die komplette Python-Kette lässt sich **ohne Hardware** verifizieren:
 - [x] Live-Inferenz im Backend integriert
 - [x] Web-Frontend — Echtzeit-Anzeige der Zahlenfolge
 - [x] **App auf echter Hardware** (iPhone) — Verbindung & Streaming bestätigt ✅
-- [ ] **Echte Daten sammeln** — ~60–100 Beispiele pro Ziffer pro Person
-- [ ] **Tuning** — Energie-Schwellen, Confidence-Schwelle, Fehleranalyse
+- [x] **Daten erhoben** — 624 Segmente über alle zehn Ziffern, drei Personen
+- [x] **Training & Fehleranalyse** — sechs Iterationen, Konfusionsmatrix,
+      Kontrollexperiment zu langen Segmenten
+- [x] **Cross-Session-Hold-out** — 145 von 150 Beispielen einer unabhängigen Sitzung
+- [ ] **Cross-Person-Test** — mind. fünf unbeteiligte Personen (offen)
+- [ ] **Konfidenzschwelle empirisch begründen** — Ablehnungs- gegen Fehlerrate auftragen
 
 ---
 

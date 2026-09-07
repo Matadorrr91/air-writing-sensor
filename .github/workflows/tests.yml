@@ -1,0 +1,19 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Abhängigkeiten (nur numpy nötig)
+        run: pip install numpy
+      - name: Pipeline-Tests (Segmentierung, Vorverarbeitung, Augmentation)
+        run: python -m tests.test_pipeline
