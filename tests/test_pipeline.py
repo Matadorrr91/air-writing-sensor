@@ -8,6 +8,8 @@ Prueft:
   - Vorverarbeitung liefert die feste Form
   - Augmentation vervielfacht den Datensatz
   - Segmente lassen sich speichern und wieder laden
+  - die Schreibpause wird am Segmentende abgeschnitten
+  - zu kurze Ausschlaege (Zucken) werden verworfen
 """
 
 import sys
@@ -97,9 +99,78 @@ def test_save_load():
     print(f"[ok] Speichern/Laden: {len(loaded)} Segmente round-trip")
 
 
+
+def synth_mit_zucken():
+    """Wie synth_recording, aber mit einem kurzen Zucken vor der echten Ziffer."""
+    fs = config.SAMPLE_RATE_HZ
+    samples = []
+    t = 0.0
+    dt = 1.0 / fs
+
+    def add(duration, writing):
+        nonlocal t
+        n = int(duration * fs)
+        for i in range(n):
+            if writing:
+                a = 0.25 * np.sin(2 * np.pi * 3 * (i / fs))
+                g = 0.5 * np.cos(2 * np.pi * 3 * (i / fs))
+            else:
+                a = 0.002 * np.sin(i)
+                g = 0.0
+            samples.append({"t": t, "ax": a, "ay": a * 0.5, "az": a * 0.3,
+                            "gx": g, "gy": g * 0.4, "gz": g * 0.2})
+            t += dt
+
+    add(0.5, False)
+    add(0.15, True)    # Zucken -- kuerzer als MIN_SEGMENT_DURATION_S
+    add(0.5, False)
+    add(1.0, True)     # echte Ziffer
+    add(0.5, False)
+    return samples
+
+
+def test_pause_wird_abgeschnitten():
+    """Die Schreibpause selbst gehoert nicht mehr ins Segment.
+
+    Der Segmenter merkt sich den Zeitpunkt des letzten aktiven Samples und
+    schneidet alles danach ab. Ohne diesen Schnitt wuerde die Ruhephase beim
+    Resampling einen Teil der RESAMPLE_LENGTH Zeitschritte mit Stillstand
+    fuellen -- das Netz saehe dann bei jeder Ziffer dasselbe tote Ende.
+    """
+    segs = segment_recording(synth_recording())
+    schreibdauer = 1.0                      # so lang schreibt synth_recording
+    # Ohne Schnitt waere das Segment mindestens schreibdauer + PAUSE_DURATION_S lang.
+    ungeschnitten = schreibdauer + config.PAUSE_DURATION_S
+    grenze = schreibdauer + config.SMOOTHING_WINDOW / config.SAMPLE_RATE_HZ + 0.05
+    for i, seg in enumerate(segs):
+        dauer = len(seg) / config.SAMPLE_RATE_HZ
+        assert dauer < ungeschnitten, (
+            f"Segment {i} ist {dauer:.2f}s lang -- die Pause wurde mitgespeichert"
+        )
+        assert dauer <= grenze, f"Segment {i}: {dauer:.2f}s > erwartet {grenze:.2f}s"
+    print(f"[ok] Pause abgeschnitten: Segmente "
+          f"{[round(len(s) / config.SAMPLE_RATE_HZ, 2) for s in segs]}s "
+          f"(ungeschnitten waeren es >= {ungeschnitten:.2f}s)")
+
+
+def test_zucken_wird_verworfen():
+    """Zu kurze Ausschlaege sind kein Schreibvorgang und muessen rausfallen.
+
+    MIN_SEGMENT_DURATION_S filtert unbeabsichtigte Bewegungen. Ohne diesen
+    Filter landet jedes Wackeln als eigenes Trainingssegment im Datensatz.
+    """
+    segs = segment_recording(synth_mit_zucken())
+    assert len(segs) == 1, f"erwartet 1 Segment (Zucken verworfen), erhalten {len(segs)}"
+    dauer = len(segs[0]) / config.SAMPLE_RATE_HZ
+    assert dauer >= config.MIN_SEGMENT_DURATION_S
+    print(f"[ok] Zucken verworfen: 1 von 2 Ausschlaegen behalten ({dauer:.2f}s)")
+
+
 if __name__ == "__main__":
     test_segmentation()
     test_preprocessing()
     test_augment()
     test_save_load()
+    test_pause_wird_abgeschnitten()
+    test_zucken_wird_verworfen()
     print("\nAlle Tests bestanden.")
