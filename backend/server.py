@@ -1,4 +1,4 @@
-"""Live-Server: empfaengt den Sensorstrom der Watch, segmentiert, erkennt die
+"""Live-Server: empfängt den Sensorstrom des iPhones, segmentiert, erkennt die
 Ziffer mit dem 1D-CNN und schiebt das Ergebnis an die Browser-Anzeige.
 
 Aufruf:
@@ -7,10 +7,13 @@ Dann im Browser:  http://localhost:8000
 
 Endpunkte:
     GET  /            -> Frontend (frontend/index.html)
-    WS   /ws/watch    -> Sensordaten von der Watch (JSON-Samples)
+    WS   /ws/watch    -> Sensordaten vom iPhone (JSON-Samples)
+                         Der Pfadname stammt aus der watchOS-Vorgängerversion.
+                         NICHT umbenennen: beide Swift-Apps haben ihn fest
+                         verdrahtet (app/*/MotionStreamer.swift, wsPath).
     WS   /ws/display  -> erkannte Ziffern an den Browser
 
-Ohne trainiertes Modell (models/model.pt) laeuft der Server im DEBUG-Modus:
+Ohne trainiertes Modell (models/model.pt) läuft der Server im DEBUG-Modus:
 Segmente werden nur erkannt und gemeldet, aber nicht klassifiziert.
 """
 
@@ -66,7 +69,7 @@ hub = DisplayHub()
 
 
 def classify(seg) -> dict:
-    """Ein Segment klassifizieren. Gibt die Nachricht fuer das Frontend zurueck."""
+    """Ein Segment klassifizieren. Gibt die Nachricht für das Frontend zurück."""
     if MODEL is None:
         return {"type": "segment", "samples": int(len(seg))}
     x = preprocessing.preprocess(seg, MEAN, STD).T   # (C, T)
@@ -82,10 +85,10 @@ def classify(seg) -> dict:
 
 @app.websocket("/ws/watch")
 async def ws_watch(ws: WebSocket):
-    """Sensordaten von der Watch: ein JSON-Sample pro Nachricht."""
+    """Sensordaten vom iPhone: ein JSON-Sample pro Nachricht."""
     await ws.accept()
     seg = Segmenter()
-    print("[server] Watch verbunden.")
+    print("[server] iPhone verbunden.")
     try:
         while True:
             raw = await ws.receive_text()
@@ -99,12 +102,12 @@ async def ws_watch(ws: WebSocket):
                 print(f"[server] Segment ({len(result)} Samples) -> {msg}")
                 await hub.broadcast(msg)
     except WebSocketDisconnect:
-        print("[server] Watch getrennt.")
+        print("[server] iPhone getrennt.")
 
 
 @app.websocket("/ws/display")
 async def ws_display(ws: WebSocket):
-    """Browser-Anzeige: empfaengt erkannte Ziffern."""
+    """Browser-Anzeige: empfängt erkannte Ziffern."""
     await hub.add(ws)
     await ws.send_text(json.dumps({"type": "status", "model_loaded": MODEL is not None}))
     try:

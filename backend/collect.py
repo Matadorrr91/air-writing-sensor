@@ -1,18 +1,18 @@
 """Gelabeltes Sammeln von Trainingssegmenten.
 
-Startet einen WebSocket-Server, mit dem sich die Watch-App verbindet. Das
-Terminal zeigt fortlaufend, welche Ziffer als naechstes zu schreiben ist.
+Startet einen WebSocket-Server, mit dem sich die iPhone-App verbindet. Das
+Terminal zeigt fortlaufend, welche Ziffer als nächstes zu schreiben ist.
 Sobald die Segmentierung eine Schreibung erkennt (Ziffer + Pause), wird sie
-unter dem aktuellen Ziel-Label gespeichert und die naechste Ziffer angezeigt.
+unter dem aktuellen Ziel-Label gespeichert und die nächste Ziffer angezeigt.
 
 Aufruf:
     python -m backend.collect --person max
     python -m backend.collect --person lisa --count 80 --shuffle
 
 Hinweise:
-    - Vor dem Start die Watch-App auf diese Laptop-IP + Port zeigen lassen.
-    - Pro erkanntem Segment wird automatisch zur naechsten Ziffer gewechselt.
-    - Fehlerhafte Aufnahmen koennen als Datei aus dataset/ geloescht werden.
+    - Vor dem Start die iPhone-App auf diese Laptop-IP + Port zeigen lassen.
+    - Pro erkanntem Segment wird automatisch zur nächsten Ziffer gewechselt.
+    - Fehlerhafte Aufnahmen können als Datei aus dataset/ gelöscht werden.
 """
 
 import argparse
@@ -48,7 +48,7 @@ class Collector:
         print(f"\n>>> Schreibe jetzt:  [ {target} ]   ({self.ptr + 1}/{len(self.schedule)})")
 
     async def handle(self, ws):
-        print(f"Watch verbunden ({self.person}).")
+        print(f"iPhone verbunden ({self.person}).")
         self._prompt()
         seg = Segmenter()
         async for message in ws:
@@ -74,7 +74,7 @@ async def run(args):
     print(f"Sammel-Server auf ws://{config.HOST}:{config.PORT}  (Person: {args.person})")
     print(f"Plan: {args.count}x je Ziffer {digits}  =>  {len(schedule)} Segmente")
     async with websockets.serve(collector.handle, config.HOST, config.PORT, max_size=None):
-        await asyncio.Future()   # laeuft bis Strg+C
+        await asyncio.Future()   # läuft bis Strg+C
 
 
 def main():

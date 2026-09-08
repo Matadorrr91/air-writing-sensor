@@ -18,7 +18,11 @@ Ergebnis erscheint live im Browser. Details: siehe `README.md`.
 - ✅ **Verbindung iPhone → Backend → Browser wurde erfolgreich getestet**:
   Segmente (blaue Kreise) erscheinen live.
 - ℹ️ Die Erfassung läuft ausschließlich über die **iOS-App**
-  (`app/AirWritingPhone/`). Es gibt keine watchOS-Version.
+  (`app/AirWritingPhone/`). Das watchOS-Target (`app/AirWriting/`) liegt mit
+  eigenem Schema weiterhin im Xcode-Projekt, wird aber **nicht** verwendet: Die
+  App ließ sich auf der vorhandenen Apple Watch Series 4 (watchOS 10.5) mit
+  einem kostenlosen Entwickler-Account nicht installieren — das war der Grund
+  für den Wechsel aufs iPhone.
 
 ## Ziel auf dem Windows-Rechner
 Der Nutzer will **Daten sammeln und das Modell trainieren** (kein Mac mehr nötig).
