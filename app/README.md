@@ -4,6 +4,12 @@ Die **iOS-App** liegt im Ordner [`AirWritingPhone/`](AirWritingPhone/) und wird
 über das Xcode-Projekt `AirWriting.xcodeproj` gebaut (Schema/Target
 **AirWritingPhone**).
 
+> ⚠️ Das Projekt enthält **zwei** Schemes. `AirWriting` ist das watchOS-Target aus
+> der Vorgängerversion und wird **nicht** verwendet — es ließ sich auf der
+> vorhandenen Apple Watch Series 4 (watchOS 10.5) mit kostenlosem Account nicht
+> installieren, was den Wechsel aufs iPhone ausgelöst hat. Zum Bauen immer
+> **AirWritingPhone** wählen.
+
 ## Was die App tut
 Liest die Bewegungssensoren (CoreMotion, 50 Hz) und streamt jedes Sample als
 JSON über einen WebSocket an `ws://<server-ip>:8000/ws/watch`. Felder:

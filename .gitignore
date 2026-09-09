@@ -4,11 +4,19 @@ __pycache__/
 .venv/
 venv/
 
-# Gesammelte Daten & trainierte Modelle (gross / personen-/laufabhaengig)
+# Gesammelte Daten & trainierte Modelle (groß / personen-/laufabhängig)
 backend/dataset/*
 !backend/dataset/.gitkeep
 backend/models/*
 !backend/models/.gitkeep
+
+# Word-Sperrdateien -- entstehen beim Oeffnen von bericht/*.docx
+~$*.docx
+~$*.doc
+
+# Test-/Build-Reste
+.pytest_cache/
+*.egg-info/
 
 # Betriebssystem / Editor
 .DS_Store
