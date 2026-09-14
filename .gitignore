@@ -4,9 +4,8 @@ __pycache__/
 .venv/
 venv/
 
-# Gesammelte Daten & trainierte Modelle (groß / personen-/laufabhängig)
-backend/dataset/*
-!backend/dataset/.gitkeep
+# Trainierte Modelle (laufabhängig, werden per backend.train neu erzeugt)
+# Der Datensatz unter backend/dataset/ wird bewusst mitversioniert.
 backend/models/*
 !backend/models/.gitkeep
 
